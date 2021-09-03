@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config" packages="com.vnpay.common.handle">
+
+    <Properties>
+        <Property name="log-path">/var/logs/web/</Property>
+        <Property name="log-name">mainsrv</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{DEFAULT} %5p [%30C{1}] [%4L] [%X{requestId}] [%X{username}] [mid%X{mid}] - %m%n%exception"/>
+        </Console>
+
+        <!-- Ghi log bat dong bo -->
+        <!-- <RollingFile name="File" fileName="${log-path}/${log-name}.log" append="false" immediateFlush="false" -->
+        <RollingFile name="File" fileName="${log-path}/${log-name}.log" append="true"
+                     filePattern="${log-path}/${log-name}-%d{yyyy-MM}/${log-name}-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout charset="UTF-8" pattern="%d{DEFAULT} %5p [%30C{1}] [%4L] [%X{requestId}] [%X{username}] [mid%X{mid}] - %m%n%exception"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB" />
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+            <DefaultRolloverStrategy max="10000" compressionLevel="9"/>
+        </RollingFile>
+
+
+        <Rewrite name="Rewrite">
+<!--            <SensitiveLogInterceptor />-->
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Rewrite>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Rewrite"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
