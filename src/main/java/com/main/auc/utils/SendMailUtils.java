@@ -51,7 +51,7 @@ public class SendMailUtils {
         helper.setSubject(subject);
         content = content.replace("[[name]]", toAddress);
 
-        String verifyURL = Constants.Login.URI_CONFIRM_SIGNUP + "/verify?code=" + code + "&username=" + toMail;
+        String verifyURL = Constants.Login.URI + "/dang-ky/xac-thuc?code=" + code + "&email=" + toMail;
         content = content.replace("[[URL]]", verifyURL);
         message.setContent(content, "text/html");
         // Send Message!
@@ -79,7 +79,7 @@ public class SendMailUtils {
         helper.setSubject(subject);
         content = content.replace("[[name]]", toAddress);
 
-        String verifyURL = Constants.Login.URI_CONFIRM_FORGOT + "/verify?code=" + code + "&username=" + toMail;
+        String verifyURL = Constants.Login.URI + "/quen-mat-khau/xac-thuc?code=" + code + "&email=" + toMail;
         content = content.replace("[[URL]]", verifyURL);
         message.setContent(content, "text/html");
         // Send Message!

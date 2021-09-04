@@ -35,17 +35,23 @@ public class FacebookUtils {
     OkHttpClient okHttpClient;
 
     public String getToken(String code) throws IOException {
-        Request requestUserInfo = (new Request.Builder()).header("Accept", "application/json")
-                .header("Content-Type", "application/json").url("https://graph.facebook.com/oauth/access_token?client_id=" + Constants.Login.FB_CLIENT_ID
-                + "&client_secret=" + Constants.Login.FB_CLIENT_SECRET + "&redirect_uri=" + Constants.Login.FB_DIRECT_SIT + "&code=" + code
-                ).build();
-        Response responseUserInfo = okHttpClient.newCall(requestUserInfo).execute();
-        String rp = responseUserInfo.body().string();
-        log.info("rp access token: " + rp);
-        FacebookAuthAccess accObj = gson.fromJson(rp, FacebookAuthAccess.class);
+        try{
+            Request requestUserInfo = (new Request.Builder()).header("Accept", "application/json")
+                    .header("Content-Type", "application/json").url("https://graph.facebook.com/oauth/access_token?client_id=" + Constants.Login.FB_CLIENT_ID
+                            + "&client_secret=" + Constants.Login.FB_CLIENT_SECRET + "&redirect_uri=" + Constants.Login.FB_DIRECT_SIT + "&code=" + code
+                    ).build();
+            Response responseUserInfo = okHttpClient.newCall(requestUserInfo).execute();
+            String rp = responseUserInfo.body().string();
+            log.info("rp access token: " + rp);
+            FacebookAuthAccess accObj = gson.fromJson(rp, FacebookAuthAccess.class);
 
 
-        return accObj.getAccessToken();
+            return accObj.getAccessToken();
+        }catch (Exception e){
+            log.info("get token facebook exception: " + e.toString());
+            return "ERROR";
+        }
+
     }
 
     public String getUserInfo(String accessToken){

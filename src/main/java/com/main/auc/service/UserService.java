@@ -20,20 +20,17 @@ import com.main.auc.utils.Constants;
 import com.main.auc.utils.FacebookUtils;
 import com.main.auc.utils.GoogleUtils;
 import com.main.auc.utils.SendMailUtils;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,14 +63,17 @@ public class UserService {
     private SendMailUtils sendMail;
 
 
-
     public ResponseEntity<?> loginGoogle(GoogleAuthClientRq rq){
         try {
             String accessToken = googleUtils.getToken(rq.getCode());
             log.info("accessToken: " + accessToken);
             if("ERROR".equals(accessToken)){
                 log.info("get accessToken fail");
-                return ResponseEntity.badRequest().body("get accessToken fail");
+                BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                        .code("TOKEN-01")
+                        .desc("accessToken fail")
+                        .build();
+                return ResponseEntity.badRequest().body(rp);
             }
 //            String accessToken = "ya29.a0ARrdaM-OrvHDKAvDc_Q-nW09KAP243jcC8m48mqqHAnBC_CajkEkeOj5AOrWP9Zs_BOsY4X8t6gjwy6cYJPUfwqXdqh6MyEu8fC9Nzho77_4ZkilUzH2E0RsRt-5IjFPvAG_kYxGWXwbKJ1JLY1vYuQHYBaB";
             GoogleAuthUserInfoData userInfoData = googleUtils.getUserInfo(accessToken);
@@ -126,7 +126,14 @@ public class UserService {
         try {
             String token = facebookUtils.getToken(rq.getCode());
 //            String token = "EAAlTXxMZACJkBAOQorKDigtW2yxKuxEEJZCTPOzP6Tr7Th2ybHn6j1gH6Tl5AcWRfS09sHZBZB8fKnkZCwqsDnLhMQdkoymDbmNTIzseggIs6r7Tu43iuQxibKrKE7CzOxXq5WGCZChcemhmahkcaHQGUWZAKRtqJ8zQytZBZAoEvcdFfvnGwDrPsHqIf28D9BPWinQIicu4PmxEnLSKkYAjPa57dAYh5R9YNU4IZB57EyFwZDZD";
-
+            if("ERROR".equals(token)){
+                log.info("get accessToken fail");
+                BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                        .code("TOKEN-01")
+                        .desc("accessToken fail")
+                        .build();
+                return ResponseEntity.badRequest().body(rp);
+            }
             String userInfo = facebookUtils.getUserInfo(token);
             log.info("userinfo: " + userInfo);
             FacebookAuthData fbData = gson.fromJson(userInfo, FacebookAuthData.class);
@@ -171,15 +178,27 @@ public class UserService {
             return ResponseEntity.ok().body(rp);
         }catch (Exception e){
             log.info("Login facebook exception: " + e.toString());
-            return ResponseEntity.badRequest().body("Exception");
+            BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                    .code("96")
+                    .desc("Exception")
+                    .build();
+            return ResponseEntity.badRequest().body(rp);
         }
     }
+
 
     public ResponseEntity<?> getUser(String token){
         try {
             String username = jwtUtils.parseUser(token.substring(7, token.length()));
             log.info("username: " + username);
-            User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User null"));
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (!userOpt.isPresent()){
+                log.info("user not found");
+                return ResponseEntity.badRequest().body(BaseClientErrorRp.builder()
+                        .code("USER-01").desc("user not found").build());
+            }
+            User user = userOpt.get();
+
             log.info("user: " + gson.toJson(user));
             List<Role> lstRoles = new ArrayList<>(user.getRoles());
             List<ERole> roles = lstRoles.stream()
@@ -193,35 +212,57 @@ public class UserService {
             return ResponseEntity.ok(rp);
         }catch (Exception e){
             log.info("get info user exception: " + e.toString());
-            return ResponseEntity.badRequest().body("Get User Exception");
+            BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                    .code(Constants.Base.EXCEPTION)
+                    .desc("Exception")
+                    .build();
+            return ResponseEntity.badRequest().body(rp);
         }
     }
 
     public ResponseEntity<?> verifyUserSignUp(VerifySignUpClientRq rq){
-        User user = userRepository.findByUsername(rq.getUsername()).orElseThrow(() -> new RuntimeException("User null"));
-        if(rq.getCode().equals(user.getCodeRegis())){
-            if(Constants.Login.SIGNUP_CONFIRM.equals(user.getStatus())){
-                log.info("email verified");
+        try{
+            Optional<User> userOpt = userRepository.findByUsername(rq.getEmail());
+            if(!userOpt.isPresent()){
+                log.info("User null");
                 BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                        .desc("email verified")
-                        .code("01")
+                        .desc("user not found")
+                        .code("VERIFY-SIGN-03")
                         .build();
                 return ResponseEntity.badRequest().body(rp);
             }
-            user.setStatus(Constants.Login.SIGNUP_CONFIRM);
-            userRepository.save(user);
+            User user = userOpt.get();
+            if(rq.getCode().equals(user.getCodeRegis())){
+                if(Constants.Login.SIGNUP_CONFIRM.equals(user.getStatus())){
+                    log.info("email verified");
+                    BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                            .desc("email verified")
+                            .code("VERIFY-SIGN-01")
+                            .build();
+                    return ResponseEntity.badRequest().body(rp);
+                }
+                user.setStatus(Constants.Login.SIGNUP_CONFIRM);
+                userRepository.save(user);
+                BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                        .desc("verify user success")
+                        .code(Constants.Base.SUCCESS)
+                        .build();
+                return ResponseEntity.ok().body(rp);
+            }else{
+                BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                        .desc("Verify user fail, token fail")
+                        .code("VERIFY-02")
+                        .build();
+                return ResponseEntity.badRequest().body(rp);
+            }
+        }catch (Exception e){
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .desc("verify user success")
-                    .code("00")
-                    .build();
-            return ResponseEntity.ok().body(rp);
-        }else{
-            BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .desc("Verify user fail")
-                    .code("01")
+                    .code(Constants.Base.EXCEPTION)
+                    .desc("Exception")
                     .build();
             return ResponseEntity.badRequest().body(rp);
         }
+
     }
 
     public void sendVerificationEmail(User user, String siteURL)

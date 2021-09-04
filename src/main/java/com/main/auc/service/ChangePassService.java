@@ -4,6 +4,9 @@ import com.main.auc.models.User;
 import com.main.auc.payload.request.ChangePassClientRq;
 import com.main.auc.payload.response.BaseClientErrorRp;
 import com.main.auc.repsitory.UserRepository;
+import com.main.auc.utils.Constants;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +28,6 @@ public class ChangePassService {
     PasswordEncoder encoder;
 
 
-
     public ResponseEntity<?> changePass(ChangePassClientRq rq){
 
         try {
@@ -43,7 +45,7 @@ public class ChangePassService {
             BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             if(!passwordEncoder.matches(rq.getPassOld(), user.getPassword())){
                 BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                        .code("USER-02")
+                        .code("CHANGE-PASS-02")
                         .desc("Password incorrect")
                         .build();
                 return ResponseEntity.badRequest().body(rp);
@@ -51,7 +53,7 @@ public class ChangePassService {
             user.setPassword(encoder.encode(rq.getPassNew()));
             userRepository.save(user);
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("00")
+                    .code(Constants.Base.SUCCESS)
                     .desc("Change password success")
                     .build();
             return ResponseEntity.ok().body(rp);
@@ -59,7 +61,7 @@ public class ChangePassService {
         }catch (Exception e){
             log.info("change password exception: " + e.toString());
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("96")
+                    .code(Constants.Base.EXCEPTION)
                     .desc("Exception")
                     .build();
             return ResponseEntity.badRequest().body(rp);

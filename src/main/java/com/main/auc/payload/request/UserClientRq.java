@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class UserClientRq {
 
-    private String username;
+    private String email;
 }

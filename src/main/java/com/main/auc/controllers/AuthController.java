@@ -17,6 +17,8 @@ import com.main.auc.service.UserService;
 import com.main.auc.utils.Constants;
 import com.main.auc.utils.SendMailUtils;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,13 +75,18 @@ public class AuthController {
     SendMailUtils sendMailUtils;
 
     @PostMapping("/login")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (LOGIN-01: khong tim thay user, " +
+                    "LOGIN-02: email chua xac thuc, " +
+                    "LOGIN-03: mat khau khong chinh xac )")
+    })
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Optional<User> userOpt = userRepository.findByUsername(loginRequest.getEmail());
         if(!userOpt.isPresent()){
             log.info("username not found");
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("01")
+                    .code("LOGIN-01")
                     .desc("username not found")
                     .build();
             return ResponseEntity.badRequest().body(rp);
@@ -89,7 +96,7 @@ public class AuthController {
         if(Constants.Login.SIGNUP_INIT.equals(user.getStatus())){
             log.info("user not confirm");
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("01")
+                    .code("LOGIN-02")
                     .desc("user not confirm")
                     .build();
             return ResponseEntity.badRequest().body(rp);
@@ -97,7 +104,7 @@ public class AuthController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("02")
+                    .code("LOGIN-03")
                     .desc("Password incorrect")
                     .build();
             return ResponseEntity.badRequest().body(rp);
@@ -122,7 +129,11 @@ public class AuthController {
                 .build());
     }
 
+
     @PostMapping("login/google")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (TOKEN-01: lay accessToken loi, 96: Exception)")
+    })
     public ResponseEntity<?> loginGoogle(@Valid @RequestBody GoogleAuthClientRq rq){
         return userService.loginGoogle(rq);
     }
@@ -130,23 +141,33 @@ public class AuthController {
 
     @ApiOperation("Đăng nhập bằng facebook, clientID: 540092220598011")
     @PostMapping("login/facebook")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (TOKEN-01: lay accessToken loi, 96: Exception)")
+    })
     public ResponseEntity<?> loginFacebook(@RequestBody FbAuthClientRq rq){
         return userService.loginFacebook(rq);
     }
 
 
     @PostMapping("/signup")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (SIGNUP-01: lay accessToken loi, 96: Exception)")
+    })
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) throws UnsupportedEncodingException, MessagingException, javax.mail.MessagingException {
         if (userRepository.existsByUsername(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(MessageResponse.builder().message ("Error: Username is already taken!").build());
+                    .body(BaseClientErrorRp.builder()
+                            .code("SIGNUP-01").desc("email is already in use")
+                            .build());
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(MessageResponse.builder().message ("Error: Email is already in use!").build());
+                    .body(BaseClientErrorRp.builder()
+                            .code("SIGNUP-01").desc("email is already in use")
+                            .build());
         }
 
         String regisCode = RandomString.make(40);
@@ -194,26 +215,25 @@ public class AuthController {
         user.setRoles(roles);
         CompletableFuture.runAsync(() -> {
             try {
-                log.info("begin send Email");
-//                userService.sendVerificationEmail(user, Constants.Login.URI_CONFIRM_SIGNUP);
+                log.info("begin send Email: " + user.getEmail());
                 sendMailUtils.sendSimpleEmailSignUp(user.getEmail(), regisCode);
-                log.info("send email success");
+                log.info("send email success" + user.getEmail());
             } catch (MessagingException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         });
 
         userRepository.save(user);
-//        try {
-//            userService.sendVerificationEmail(user, Constants.Login.URI_CONFIRM_SIGNUP);
-//        }catch (Exception e){
-//            log.info("send email exception: " + e.toString());
-//        }
 
-        return ResponseEntity.ok(MessageResponse.builder().message("User registered successfully!").build());
+        return ResponseEntity.ok(BaseClientErrorRp.builder().code(Constants.Base.SUCCESS).desc("sign up success").build());
     }
 
     @PostMapping("/signup/verify")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (VERIFY-SIGN-03: khong tim thay user," +
+                    "VERIFY-SIGN-01: email da duoc verify" + "VERIFY-02: token xac thuc khong chinh xac"
+                    + " 96: Exception)")
+    })
     public ResponseEntity<?> verifyUserSignUp(@Valid @RequestBody VerifySignUpClientRq rq){
         try {
             return userService.verifyUserSignUp(rq);
@@ -224,10 +244,19 @@ public class AuthController {
     }
 
     @PostMapping("/forgot/pass")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (FORGOT-01: khong tim thay user, " +
+                    " 96: Exception)")
+    })
     public ResponseEntity<?> forgotPass(@RequestBody BaseClientRq rq){
         return forgotPassService.forgotPass(rq);
     }
 
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Bad Request (VERIFY-FORGOT-01: khong tim thay user, " +
+                    "VERIFY-FORGOT-02: code khong chinh xac, "
+                    + " 96: Exception)")
+    })
     @PostMapping("/forgot/pass/verify")
     public ResponseEntity<?> verifyForgotPass(@RequestBody ForgotPassClientRq rq){
         return forgotPassService.verifyForgotPass(rq);

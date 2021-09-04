@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VerifySignUpClientRq {
-    private String username;
+    private String email;
     private String code;
 }

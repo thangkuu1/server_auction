@@ -20,9 +20,12 @@ public class Constants {
 //        public static final String FB_CLIENT_SECRET = "a8eeb0da56c3947d499e80b42b7673d0";
         public static final String FB_DIRECT_SIT = "https://localhost:3005/callback/facebook";
         public static final String GG_DIRECT_SIT = "http://localhost:3005/callback/google";
-        public static final String URI_CONFIRM_SIGNUP = "http://localhost:3005/confirm/signup";
-        public static final String URI_CONFIRM_FORGOT = "http://localhost:3005/forgot/password";
+        public static final String URI = "http://localhost:3005";
 //        public static final String GG_DIRECT_SIT = "http://localhost:8089/callback";
+    }
+    public static class Base{
+        public static final String SUCCESS = "00";
+        public static final String EXCEPTION = "96";
     }
 
     public static class Contact{

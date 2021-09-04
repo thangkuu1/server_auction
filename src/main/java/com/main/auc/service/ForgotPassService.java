@@ -7,6 +7,8 @@ import com.main.auc.payload.response.BaseClientErrorRp;
 import com.main.auc.repsitory.UserRepository;
 import com.main.auc.utils.Constants;
 import com.main.auc.utils.SendMailUtils;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,7 @@ public class ForgotPassService {
     @Autowired
     PasswordEncoder encoder;
 
+
     public ResponseEntity<?> forgotPass(BaseClientRq rq){
         try{
 
@@ -38,7 +41,7 @@ public class ForgotPassService {
             if(!userOptional.isPresent()){
                 log.info("not found user ");
                 BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                        .code("01")
+                        .code("FORGOT-01")
                         .desc("not found user")
                         .build();
                 return ResponseEntity.badRequest().body(rp);
@@ -50,28 +53,29 @@ public class ForgotPassService {
             userRepository.save(user);
             CompletableFuture.runAsync(() -> {
                 try {
-                    log.info("begin send Email");
+                    log.info("begin send Email forgot password: " + rq.getEmail());
                     sendMailUtils.sendSimpleEmailForgotPass(rq.getEmail(), codeForgot);
-                    log.info("send email success");
+                    log.info("send email success forgot password: " + rq.getEmail());
                 } catch (MessagingException | UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
             });
 
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("00")
+                    .code(Constants.Base.SUCCESS)
                     .desc("Success")
                     .build();
             return ResponseEntity.ok().body(rp);
         }catch (Exception e){
             log.info("forgot password exception: " + e.toString());
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("96")
+                    .code(Constants.Base.EXCEPTION)
                     .desc("Exception")
                     .build();
             return ResponseEntity.badRequest().body(rp);
         }
     }
+
 
     public ResponseEntity<?> verifyForgotPass(ForgotPassClientRq rq){
         try {
@@ -79,7 +83,7 @@ public class ForgotPassService {
             if(!userOptional.isPresent()){
                 log.info("not found user ");
                 BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                        .code("01")
+                        .code("VERIFY-FORGOT-01")
                         .desc("not found user")
                         .build();
                 return ResponseEntity.badRequest().body(rp);
@@ -89,7 +93,7 @@ public class ForgotPassService {
             if(!rq.getCode().equals(user.getCodeForgot())){
                 log.info("verify code fail");
                 BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                        .code("02")
+                        .code("VERIFY-FORGOT-02")
                         .desc("verify code forgot pass fail")
                         .build();
                 return ResponseEntity.badRequest().body(rp);
@@ -98,14 +102,14 @@ public class ForgotPassService {
             user.setCodeForgot("");
             userRepository.save(user);
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("00")
+                    .code(Constants.Base.SUCCESS)
                     .desc("forgot password success")
                     .build();
             return ResponseEntity.ok().body(rp);
         }catch (Exception e){
             log.info("forgot password verify exception: " + e.toString());
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
-                    .code("96")
+                    .code(Constants.Base.EXCEPTION)
                     .desc("Exception")
                     .build();
             return ResponseEntity.badRequest().body(rp);
