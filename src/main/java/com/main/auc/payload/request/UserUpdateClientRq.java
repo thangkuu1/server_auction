@@ -1,18 +1,11 @@
-package com.main.auc.dto;
+package com.main.auc.payload.request;
 
-import com.main.auc.models.ERole;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import java.util.List;
-
 @Getter
 @Setter
-@Builder
-public class UserDto {
-
+public class UserUpdateClientRq {
     private Long id;
     private String username;
     private String email;
@@ -34,10 +27,6 @@ public class UserDto {
 
     private String placeIssue;
 
-    private String frontIdNumber;
-
-    private String backIdNumber;
-
     private String accountNo;
 
     private String bankName;
@@ -45,5 +34,4 @@ public class UserDto {
     private String branchName;
 
     private String accountName;
-    private List<ERole> roles;
 }

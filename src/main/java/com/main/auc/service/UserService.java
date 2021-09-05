@@ -20,8 +20,6 @@ import com.main.auc.utils.Constants;
 import com.main.auc.utils.FacebookUtils;
 import com.main.auc.utils.GoogleUtils;
 import com.main.auc.utils.SendMailUtils;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -207,6 +205,13 @@ public class UserService {
             UserDto rp = UserDto.builder()
                     .id(user.getId())
                     .username(user.getUsername()).email(user.getEmail())
+                    .fullName(user.getFullName()).accType(user.getAccType())
+                    .phoneNumber(user.getPhoneNumber()).address(user.getAddress())
+                    .dob(user.getDob()).sex(user.getSex()).idNumber(user.getIdNumber())
+                    .dateIssued(user.getDateIssued()).placeIssue(user.getPlaceIssue())
+                    .frontIdNumber(user.getFrontIdNumber()).backIdNumber(user.getBackIdNumber())
+                    .accountNo(user.getAccountNo()).bankName(user.getBankName())
+                    .accountName(user.getAccountName())
                     .roles(roles)
                     .build();
             return ResponseEntity.ok(rp);

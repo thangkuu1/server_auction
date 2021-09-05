@@ -21,6 +21,10 @@ public class MyHttpServletRequestWrapper extends HttpServletRequestWrapper {
         this.myServletInputStream = new MyServletInputStream();
     }
 
+    public boolean isFileUploadRequest(HttpServletRequest aRequest){
+        return aRequest.getContentType().startsWith("multipart/form-data");
+    }
+
     public void resetInputStream(byte[] newRawData) {
         rawData = newRawData;
         myServletInputStream.inputStream = new ByteArrayInputStream(newRawData);

@@ -16,4 +16,5 @@ public class SignUpRequest {
     private String email;
 
     private Set<String> role;
+    private String fullName;
 }

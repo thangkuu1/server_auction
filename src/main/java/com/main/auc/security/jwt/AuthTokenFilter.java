@@ -5,6 +5,7 @@ import com.main.auc.security.services.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,23 +47,47 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             }
 
             MDC.put("requestId", RandomString.make(15));
-            MyHttpServletRequestWrapper requestWrapper = new MyHttpServletRequestWrapper(request);
-            ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
-            log.info("HTTP method: {}", requestWrapper.getMethod());
 
+            log.info("contentType: " + request.getContentType());
+            if(!Strings.isEmpty(request.getContentType()) && request.getContentType().contains("multipart/form-data")){
 
-            String jsonData = IOUtils.toString(requestWrapper.getReader());
-            log.info("Json Request: {}", jsonData);
-            requestWrapper.setAttribute("JSON_REQ", jsonData);
-            requestWrapper.resetInputStream(jsonData.getBytes(StandardCharsets.UTF_8));
+                filterChain.doFilter(request, response);
+                ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+                String resStr = new String(responseWrapper.getContentAsByteArray(), StandardCharsets.UTF_8);
 
+                log.info("http code: " + responseWrapper.getStatusCode());
+                log.info("rs: " + resStr);
+            }else{
+                MyHttpServletRequestWrapper requestWrapper = new MyHttpServletRequestWrapper(request);
+                ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+                log.info("HTTP method: {}", requestWrapper.getMethod());
 
+                log.info("endpoint: " + requestWrapper.getRequestURI());
+                String jsonData = IOUtils.toString(requestWrapper.getReader());
+                log.info("Json Request: {}", jsonData);
+//            requestWrapper.setAttribute("JSON_REQ", jsonData);
+                requestWrapper.resetInputStream(jsonData.getBytes(StandardCharsets.UTF_8));
+                filterChain.doFilter(requestWrapper, responseWrapper);
+                String resStr = new String(responseWrapper.getContentAsByteArray(), StandardCharsets.UTF_8);
+                log.info("http code: " + responseWrapper.getStatusCode());
+                log.info("rs: " + resStr);
+                responseWrapper.copyBodyToResponse();
+            }
 
-            filterChain.doFilter(requestWrapper, responseWrapper);
-            String resStr = new String(responseWrapper.getContentAsByteArray(), StandardCharsets.UTF_8);
-            log.info("httpcode: " + responseWrapper.getStatusCode());
-            log.info("rs: " + resStr);
-            responseWrapper.copyBodyToResponse();
+//            MyHttpServletRequestWrapper requestWrapper = new MyHttpServletRequestWrapper(request);
+//            ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+//            log.info("HTTP method: {}", requestWrapper.getMethod());
+//
+//            log.info("endpoint: " + requestWrapper.getRequestURI());
+//            String jsonData = IOUtils.toString(requestWrapper.getReader());
+//            log.info("Json Request: {}", jsonData);
+////            requestWrapper.setAttribute("JSON_REQ", jsonData);
+//            requestWrapper.resetInputStream(jsonData.getBytes(StandardCharsets.UTF_8));
+//            filterChain.doFilter(requestWrapper, responseWrapper);
+//            String resStr = new String(responseWrapper.getContentAsByteArray(), StandardCharsets.UTF_8);
+//            log.info("http code: " + responseWrapper.getStatusCode());
+//            log.info("rs: " + resStr);
+//            responseWrapper.copyBodyToResponse();
 
         } catch (Exception e) {
             log.error("Cannot set user authentication: {}", e);

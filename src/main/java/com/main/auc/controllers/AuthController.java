@@ -101,6 +101,11 @@ public class AuthController {
                     .build();
             return ResponseEntity.badRequest().body(rp);
         }
+        String loginFist = "0";
+        if("0".equals(user.getLoginFirst())){
+            log.info("login first " + user.getEmail());
+            loginFist = "1";
+        }
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
             BaseClientErrorRp rp = BaseClientErrorRp.builder()
@@ -125,6 +130,7 @@ public class AuthController {
         return ResponseEntity.ok(JwtResponse.builder()
                 .id(userDetails.getId()).email(userDetails.getEmail())
                 .username(userDetails.getUsername()).token(jwt)
+                .loginFirst(loginFist)
                 .roles(roles)
                 .build());
     }
@@ -176,6 +182,8 @@ public class AuthController {
         User user = User.builder()
                 .username(signUpRequest.getEmail()).email(signUpRequest.getEmail())
                 .password(encoder.encode(signUpRequest.getPassword()))
+                .fullName(signUpRequest.getFullName())
+                .loginFirst("0")
                 .status(Constants.Login.SIGNUP_INIT)
                 .loginType(Constants.Login.LOGIN_TYPE_SYS)
                 .codeRegis(regisCode)
