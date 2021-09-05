@@ -11,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -22,8 +23,10 @@ public class RequestInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        MDC.put("requestId", RandomString.make(15));
-//        log.info(gson.toJson(request));
+
+//            MyRequestWrapper requestWrapper = new MyRequestWrapper(request);
+//            log.info(requestWrapper.getBody());
+
         return true;
     }
     @Override
