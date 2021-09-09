@@ -18,9 +18,18 @@ public class Constants {
         public static final String FB_CLIENT_ID = "540092220598011";
         public static final String FB_CLIENT_SECRET = "161f062c7e71096cd291be07199236dd";
 //        public static final String FB_CLIENT_SECRET = "a8eeb0da56c3947d499e80b42b7673d0";
+
         public static final String FB_DIRECT_SIT = "https://localhost:3005/callback/facebook";
+//        public static final String FB_DIRECT_SIT = "https://vvi-fe-uat.herokuapp.com/callback/facebook";
+//        public static final String FB_DIRECT_SIT = "https://vvi-fe-qa.herokuapp.com/callback/facebook";
+
         public static final String GG_DIRECT_SIT = "http://localhost:3005/callback/google";
+//        public static final String GG_DIRECT_SIT = "https://vvi-fe-uat.herokuapp.com/callback/google";
+//        public static final String GG_DIRECT_SIT = "https://vvi-fe-qa.herokuapp.com/callback/google";
+
         public static final String URI = "http://localhost:3005";
+//        public static final String URI = "https://vvi-fe-uat.herokuapp.com";
+//        public static final String URI = "https://vvi-fe-qa.herokuapp.com";
 //        public static final String GG_DIRECT_SIT = "http://localhost:8089/callback";
     }
     public static class Base{
