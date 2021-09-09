@@ -61,7 +61,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 MyHttpServletRequestWrapper requestWrapper = new MyHttpServletRequestWrapper(request);
                 ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
                 log.info("HTTP method: {}", requestWrapper.getMethod());
-
+                String endpoint = requestWrapper.getRequestURI();
                 log.info("endpoint: " + requestWrapper.getRequestURI());
                 String jsonData = IOUtils.toString(requestWrapper.getReader());
                 log.info("Json Request: {}", jsonData);
@@ -70,7 +70,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 filterChain.doFilter(requestWrapper, responseWrapper);
                 String resStr = new String(responseWrapper.getContentAsByteArray(), StandardCharsets.UTF_8);
                 log.info("http code: " + responseWrapper.getStatusCode());
-                log.info("rs: " + resStr);
+                if(!endpoint.contains("files")){
+                    log.info("rs: " + resStr);
+                }
                 responseWrapper.copyBodyToResponse();
             }
 
