@@ -31,9 +31,8 @@ public class UserController {
         return userService.getUser(rq);
     }
 
-    @PostMapping(value = "/update")
-    public ResponseEntity<?> updateUser(@RequestPart("files") MultipartFile[] files){
-//        return userService.updateUser(files);
-        return  null;
+    @PutMapping(value = "")
+    public ResponseEntity<?> updateUser(@RequestPart("imgFront") MultipartFile imgFront, @RequestPart("imgBack") MultipartFile imgBack, @RequestPart("user") String user){
+        return userService.updateUser(imgFront, imgBack, user);
     }
 }

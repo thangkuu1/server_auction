@@ -9,6 +9,7 @@ import com.main.auc.models.Role;
 import com.main.auc.models.User;
 import com.main.auc.payload.request.FbAuthClientRq;
 import com.main.auc.payload.request.GoogleAuthClientRq;
+import com.main.auc.payload.request.UserUpdateClientRq;
 import com.main.auc.payload.request.VerifySignUpClientRq;
 import com.main.auc.payload.response.BaseClientErrorRp;
 import com.main.auc.payload.response.JwtResponse;
@@ -21,14 +22,17 @@ import com.main.auc.utils.FacebookUtils;
 import com.main.auc.utils.GoogleUtils;
 import com.main.auc.utils.SendMailUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
+import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -297,5 +301,64 @@ public class UserService {
 
         sendMail.sendSimpleEmail(subject, content, user.getEmail());
 
+    }
+
+
+    @Transactional
+    public ResponseEntity<?> updateUser(MultipartFile imgFront, MultipartFile imgBack, String userJson){
+        try {
+            log.info("user: " + userJson);
+
+            UserUpdateClientRq userDto = gson.fromJson(userJson, UserUpdateClientRq.class);
+            Optional<User> userOpt = userRepository.findById(userDto.getId());
+            if(!userOpt.isPresent()){
+                log.info("update user null");
+                BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                        .code("UPDATE-USER-01")
+                        .desc("null user")
+                        .build();
+                return ResponseEntity.badRequest().body(rp);
+            }
+            User user = userOpt.get();
+
+            user.setEmail(userDto.getEmail() == null ? user.getEmail() : userDto.getEmail());
+            user.setUsername(userDto.getUsername() == null ? user.getUsername() : userDto.getUsername());
+            user.setPhoneNumber(userDto.getPhoneNumber() == null ? user.getPhoneNumber() : userDto.getPhoneNumber());
+            user.setAddress(userDto.getAddress() == null ?user.getAddress() : userDto.getAddress());
+            user.setDob(userDto.getDob() == null ? user.getDob() : userDto.getDob());
+            user.setSex(userDto.getSex() == null ? user.getSex() : userDto.getSex());
+            user.setIdNumber(userDto.getIdNumber() == null ? user.getIdNumber() : userDto.getIdNumber());
+            user.setDateIssued(userDto.getDateIssued() == null ? user.getDateIssued() : userDto.getDateIssued());
+            user.setPlaceIssue(userDto.getPlaceIssue() == null ? user.getPlaceIssue() : userDto.getPlaceIssue());
+            user.setAccountNo(userDto.getAccountNo() == null ? user.getAccountNo() : userDto.getAccountNo());
+            user.setBankName(userDto.getBankName() == null ? user.getBankName() : userDto.getBankName());
+            user.setBranchName(userDto.getBranchName() == null ? user.getBranchName() : userDto.getBranchName());
+            user.setAccountName(userDto.getAccountName() == null ? user.getAccountName() : userDto.getBranchName());
+            log.info(gson.toJson(user));
+            if(!imgFront.isEmpty()){
+                String dataImgFront = "data:image/png;base64," + Base64.getEncoder().encodeToString(imgFront.getBytes());
+                user.setFrontIdNumber(dataImgFront);
+            }
+
+            if(!imgBack.isEmpty()){
+                String dataImgBack = "data:image/png;base64," + Base64.getEncoder().encodeToString(imgFront.getBytes());
+                user.setBackIdNumber(dataImgBack);
+            }
+
+//            log.info(gson.toJson(user));
+            userRepository.save(user);
+
+//            log.info(dataImgFront);
+            return ResponseEntity.ok().body(
+                    BaseClientErrorRp.builder().code("00").desc("Success").build()
+            );
+        }catch (Exception e){
+            log.info("update user exception: " + e.toString());
+            BaseClientErrorRp rp = BaseClientErrorRp.builder()
+                    .code(Constants.Base.EXCEPTION)
+                    .desc("Exception")
+                    .build();
+            return ResponseEntity.badRequest().body(rp);
+        }
     }
 }

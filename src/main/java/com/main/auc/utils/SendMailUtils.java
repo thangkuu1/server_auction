@@ -39,7 +39,7 @@ public class SendMailUtils {
         String subject = "Please verify your registration";
         String content = "Dear [[name]],<br>"
                 + "Please click the link below to verify your registration:<br>"
-                + "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>"
+                + "<h3><a href=\"[[URL]]\" target=\"_blank\">VERIFY</a></h3>"
                 + "Thank you,<br>"
                 + ".";
 
@@ -67,7 +67,7 @@ public class SendMailUtils {
         String subject = "Please verify your forgot password";
         String content = "Dear [[name]],<br>"
                 + "Please click the link below to forgot password:<br>"
-                + "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>"
+                + "<h3><a href=\"[[URL]]\" target=\"_blank\">VERIFY</a></h3>"
                 + "Thank you,<br>"
                 + ".";
 
