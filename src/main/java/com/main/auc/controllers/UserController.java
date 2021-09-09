@@ -31,7 +31,7 @@ public class UserController {
         return userService.getUser(rq);
     }
 
-    @PutMapping(value = "")
+    @PostMapping(value = "")
     public ResponseEntity<?> updateUser(@RequestPart("imgFront") MultipartFile imgFront, @RequestPart("imgBack") MultipartFile imgBack, @RequestPart("user") String user){
         return userService.updateUser(imgFront, imgBack, user);
     }
